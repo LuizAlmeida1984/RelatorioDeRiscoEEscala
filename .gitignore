@@ -1,0 +1,29 @@
+# Laravel
+laravel_scaffold/vendor/
+laravel_scaffold/.env
+laravel_scaffold/.env.backup
+laravel_scaffold/storage/logs/*.log
+laravel_scaffold/storage/framework/cache/
+laravel_scaffold/storage/framework/sessions/
+laravel_scaffold/storage/framework/views/
+laravel_scaffold/bootstrap/cache/*.php
+laravel_scaffold/public/hot
+laravel_scaffold/public/storage
+laravel_scaffold/node_modules/
+laravel_scaffold/.phpunit.cache/
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Backend (pasta de source, sem vendor)
+backend/vendor/
+backend/.env
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

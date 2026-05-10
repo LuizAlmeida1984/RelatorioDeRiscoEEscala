@@ -1,0 +1,227 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+
+  <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- ================================================ -->
+    <!-- COLUNA DE INPUTS (ESQUERDA) -->
+    <!-- ================================================ -->
+    <div class="lg:col-span-4 space-y-6 no-print">
+      <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 space-y-6">
+
+        <!-- BASE FINANCEIRA -->
+        <h2 class="text-xl font-black uppercase tracking-tighter text-indigo-600 italic">
+          BASE FINANCEIRA
+        </h2>
+
+        <div class="space-y-4">
+
+          <!-- Nome da Mentorada -->
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Mentorada
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="menteeName"
+              placeholder="Nome da Líder"
+              class="w-full mt-1 p-4 bg-slate-50 rounded-2xl border-none font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <!-- Investimento Total -->
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Investimento Total (R$)
+            </label>
+            <input
+              type="number"
+              [(ngModel)]="investment"
+              class="w-full mt-1 p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-700 outline-none"
+            />
+          </div>
+
+          <!-- Retorno Mensal -->
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Retorno Mensal Planejado (R$)
+            </label>
+            <input
+              type="number"
+              [(ngModel)]="monthlyReturn"
+              class="w-full mt-1 p-4 bg-slate-50 rounded-2xl border-none font-bold text-emerald-600 outline-none"
+            />
+          </div>
+
+          <!-- Probabilidade de Sucesso -->
+          <div>
+            <div class="flex justify-between">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Confiança na Execução (%)
+              </label>
+              <span class="text-xs font-black text-indigo-600">{{ successProb }}%</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              [(ngModel)]="successProb"
+              class="w-full h-1.5 bg-slate-100 rounded-full appearance-none accent-indigo-600 mt-2 cursor-pointer"
+            />
+          </div>
+
+        </div>
+
+        <!-- MATRIZ DE RISCO -->
+        <div class="pt-6 border-t border-slate-100">
+          <h2 class="text-xl font-black uppercase tracking-tighter text-rose-600 italic mb-4">
+            MATRIZ DE RISCO
+          </h2>
+          <div class="space-y-4">
+            <app-risk-input
+              label="Volatilidade Mercado"
+              [value]="riskFactors.market"
+              (valueChange)="updateRiskFactor('market', $event)"
+            ></app-risk-input>
+
+            <app-risk-input
+              label="Dependência Capital Humano"
+              [value]="riskFactors.team"
+              (valueChange)="updateRiskFactor('team', $event)"
+            ></app-risk-input>
+
+            <app-risk-input
+              label="Complexidade Técnica"
+              [value]="riskFactors.technical"
+              (valueChange)="updateRiskFactor('technical', $event)"
+            ></app-risk-input>
+
+            <app-risk-input
+              label="Incerteza Externa"
+              [value]="riskFactors.external"
+              (valueChange)="updateRiskFactor('external', $event)"
+            ></app-risk-input>
+          </div>
+        </div>
+
+        <!-- Botão Analisar -->
+        <button
+          type="button"
+          (click)="handleAnalyze()"
+          [disabled]="loading || !menteeName"
+          class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2 uppercase text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span *ngIf="loading" class="animate-spin inline-block text-base">⚡</span>
+          <span *ngIf="!loading">Gerar Veredito IA ✨</span>
+        </button>
+
+        <!-- Mensagem de erro da API -->
+        <div *ngIf="errorMessage" class="mt-2 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-semibold leading-relaxed">
+          ⚠ {{ errorMessage }}
+        </div>
+
+        <!-- Confirmação de relatório salvo -->
+        <div *ngIf="savedReportId" class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700 text-xs font-semibold text-center">
+          ✓ Relatório #{{ savedReportId }} salvo com sucesso.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================ -->
+    <!-- COLUNA DE RESULTADOS (DIREITA) -->
+    <!-- ================================================ -->
+    <div class="lg:col-span-8 space-y-6 print-full">
+      <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200 relative overflow-hidden">
+
+        <!-- Cabeçalho -->
+        <div class="flex justify-between items-start mb-10">
+          <div>
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">
+              Análise Estratégica
+            </h3>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase italic leading-none">
+              Relatório de Risco e Escala
+            </h1>
+          </div>
+          <button
+            *ngIf="aiAnalysis"
+            type="button"
+            (click)="printReport()"
+            class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-all no-print text-lg"
+            title="Exportar PDF"
+          >
+            ⬇
+          </button>
+        </div>
+
+        <!-- Cartões de Métricas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <app-metric-card
+            icon="clock"
+            label="Payback (Meses)"
+            [value]="stats.payback"
+            color="text-slate-800"
+          ></app-metric-card>
+
+          <app-metric-card
+            icon="trending-up"
+            label="ROI Anual"
+            [value]="stats.annualROI + '%'"
+            color="text-emerald-600"
+          ></app-metric-card>
+
+          <app-metric-card
+            icon="alert-triangle"
+            label="Status de Risco"
+            [value]="stats.riskLevel"
+            [color]="riskColor"
+          ></app-metric-card>
+        </div>
+
+        <!-- Valor Esperado (EV) -->
+        <div
+          class="p-8 rounded-[2.5rem] border-2 mb-10"
+          [ngClass]="{
+            'bg-indigo-50 border-indigo-100': expectedValuePositive,
+            'bg-rose-50 border-rose-100': !expectedValuePositive
+          }"
+        >
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-[10px] font-black uppercase text-indigo-600 tracking-widest">
+              Valor Esperado do Cenário (EV)
+            </h4>
+            <span class="text-indigo-400 text-lg">🛡</span>
+          </div>
+          <p class="text-4xl font-black tracking-tighter text-slate-900">
+            R$ {{ formatCurrency(stats.expectedValue) }}
+          </p>
+          <p class="text-[9px] text-slate-400 font-bold mt-2 uppercase">
+            Projeção estatística ajustada pela probabilidade de sucesso e matriz de risco.
+          </p>
+        </div>
+
+        <!-- Parecer da Mentora IA -->
+        <div class="bg-[#1E293B] text-white p-10 rounded-[2.5rem] shadow-2xl relative border border-slate-800">
+          <div class="absolute top-0 right-10 w-16 h-1.5 bg-indigo-500 rounded-b-full"></div>
+          <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-8 flex items-center gap-2">
+            🧠 Parecer de Alocação Estratégica
+          </h3>
+          <div class="text-sm leading-relaxed font-light italic opacity-95 whitespace-pre-wrap">
+            {{ aiAnalysis || 'Insira os dados e pontue a matriz de risco para libertar a inteligência do ciclo.' }}
+          </div>
+        </div>
+
+        <!-- Rodapé -->
+        <footer class="mt-12 pt-8 border-t border-slate-100 flex justify-between items-end">
+          <div class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+            Documento Confidencial de Gestão<br />
+            &copy; {{ currentYear }} Mentoria Ascensão
+          </div>
+          <div class="w-10 h-1 bg-indigo-600 rounded-full"></div>
+        </footer>
+
+      </div>
+    </div>
+
+  </div>
+</div>

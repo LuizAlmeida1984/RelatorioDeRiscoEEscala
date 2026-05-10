@@ -1,0 +1,14 @@
+<div class="space-y-1">
+  <div class="flex justify-between items-center">
+    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ label }}</label>
+    <span class="text-[10px] font-black text-slate-600">{{ value }}/5</span>
+  </div>
+  <div class="flex gap-1">
+    <button
+      *ngFor="let num of levels"
+      (click)="select(num)"
+      type="button"
+      [class]="'flex-1 h-2 rounded-full transition-all ' + barClass(num)"
+    ></button>
+  </div>
+</div>
