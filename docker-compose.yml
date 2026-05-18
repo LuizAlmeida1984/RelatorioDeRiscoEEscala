@@ -16,7 +16,7 @@ services:
     image: nginx:latest
     container_name: nginx_server2
     ports:
-      - "81:81"
+      - "81:80"
     volumes:
       - ./backend:/var/www
       - ./frontend:/usr/share/nginx/html
