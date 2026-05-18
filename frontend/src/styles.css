@@ -3,13 +3,55 @@
 @tailwind utilities;
 
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .no-print {
     display: none !important;
   }
+
+  .pdf-only {
+    display: block !important;
+  }
+
+  .min-h-screen {
+    background: white !important;
+    padding: 0 !important;
+    min-height: unset !important;
+  }
+
+  .max-w-6xl {
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .print-full {
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .report-card {
+    background: white !important;
     border: none !important;
     box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    position: static !important;
   }
 }

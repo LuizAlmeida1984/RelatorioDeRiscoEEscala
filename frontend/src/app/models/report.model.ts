@@ -10,7 +10,9 @@ export interface Stats {
   annualROI: string;
   expectedValue: number;
   riskLevel: string;
-  factorAvg: number;
+  dominantRisk: number;
+  sustainabilityFactor: number;
+  operationalExposure: number;
 }
 
 export interface AnalyzePayload {
@@ -22,6 +24,11 @@ export interface AnalyzePayload {
   stats: {
     payback: string;
     annual_roi: string;
+    expected_value: number;
+    risk_level: string;
+    dominant_risk: number;
+    sustainability_factor: number;
+    operational_exposure: number;
   };
 }
 
