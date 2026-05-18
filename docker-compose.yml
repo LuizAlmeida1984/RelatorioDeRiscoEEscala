@@ -3,7 +3,7 @@ version: "3.9"
 services:
   app:
     restart: unless-stopped
-    image: php:8.3-fpm
+    image: php:8.4-fpm
     container_name: laravel_app2
     working_dir: /var/www
     volumes:
