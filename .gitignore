@@ -21,10 +21,6 @@ frontend/.angular/
 backend/vendor/
 backend/.env
 backend/storage/logs/*.log
-backend/storage/framework/views/
-backend/storage/framework/cache/
-backend/storage/framework/sessions/
-backend/bootstrap/cache/*.php
 
 # OS / Editor
 .DS_Store
