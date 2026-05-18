@@ -29,9 +29,9 @@ services:
     image: postgres:15
     container_name: postgres_db2
     environment:
-      POSTGRES_DB: app2_db
-      POSTGRES_USER: app2_user
-      POSTGRES_PASSWORD: app2_pass
+      POSTGRES_DB: roi_payback
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: desenv
 
     volumes:
       - pgdata2:/var/lib/postgresql/data
