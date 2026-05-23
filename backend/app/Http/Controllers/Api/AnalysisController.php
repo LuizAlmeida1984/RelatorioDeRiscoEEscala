@@ -5,10 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Gemini\Enums\ModelVariation;
-use Gemini\GeminiHelper;
-use Gemini\Laravel\Facades\Gemini;
 use GuzzleHttp\Client;
 
 
@@ -36,8 +32,7 @@ class AnalysisController extends Controller
             'stats.ev_ajustado'        => 'nullable|numeric',
         ]);
 
-        $rf = $validated['risk_factors'];
-        $s  = $validated['stats'];
+        $s = $validated['stats'];
 
 $prompt = "
 Analise o Relatório de Risco e Escala para a empresária {$validated['mentee_name']}.
@@ -722,10 +717,10 @@ Analise integralmente o cenário seguindo TODAS as diretrizes acima.
 .";
 
 #dd($prompt);
-        $apiKey = env('GEMINI_API_KEY');
-        $model = env('GEMINI_MODEL', 'gemini-2.0-flash');
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
-        $apiKey = env('GEMINI_API_KEY');
+        // config() lê do cache em produção; env() fica em branco quando config:cache está ativo
+        $apiKey = config('gemini.api_key');
+        $model  = config('gemini.model', 'gemini-2.5-flash');
+        $url    = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
         $data = [
             "contents" => [
                 [
@@ -743,11 +738,8 @@ Analise integralmente o cenário seguindo TODAS as diretrizes acima.
 
         try {
             $response = $client->post($url, [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'X-goog-api-key' => $apiKey,
-                ],
-                'json' => $data
+                'headers' => ['Content-Type' => 'application/json'],
+                'json'    => $data,
             ]);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $statusCode = $e->getResponse()->getStatusCode();
