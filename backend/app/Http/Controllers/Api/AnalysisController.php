@@ -739,29 +739,42 @@ Analise integralmente o cenário seguindo TODAS as diretrizes acima.
         ];
 
 
-        $client = new Client(['verify' => false]); // ⚠️ NÃO deixe sua chave exposta no código
+        $client = new Client(['verify' => false, 'timeout' => 60]);
 
-        $response = $client->post($url, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'X-goog-api-key' => $apiKey,
-            ],
-            'json' => $data
-        ]);
+        try {
+            $response = $client->post($url, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-goog-api-key' => $apiKey,
+                ],
+                'json' => $data
+            ]);
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            $statusCode = $e->getResponse()->getStatusCode();
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            $geminiMsg = $body['error']['message'] ?? 'Erro desconhecido da API Gemini.';
+            \Illuminate\Support\Facades\Log::error('Gemini API error ' . $statusCode . ': ' . $geminiMsg);
+            return response()->json([
+                'error' => 'Serviço de IA temporariamente indisponível. (' . $statusCode . '): ' . $geminiMsg
+            ], 502);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            \Illuminate\Support\Facades\Log::error('Gemini connect error: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível conectar ao serviço de IA. Tente novamente.'], 503);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gemini unexpected error: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao processar análise: ' . $e->getMessage()], 500);
+        }
 
-        #echo $response->getBody();
-
-        $data = json_decode($response->getBody(), true);
-        #dd($data);
-        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $responseData = json_decode($response->getBody(), true);
+        $text = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
         if (! $text) {
             return response()->json(['error' => 'Resposta inválida da API de IA.'], 502);
         }
-    
-        return response()->json(['analysis' => $text]);        
+
+        return response()->json(['analysis' => $text]);
 
 
-    }     
+    }
 
 }
