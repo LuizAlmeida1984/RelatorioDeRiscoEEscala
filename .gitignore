@@ -20,6 +20,7 @@ frontend/.angular/
 # Backend (pasta de source, sem vendor)
 backend/vendor/
 backend/.env
+backend/.env.production
 backend/storage/logs/*.log
 
 # Scripts de deploy (contêm credenciais)

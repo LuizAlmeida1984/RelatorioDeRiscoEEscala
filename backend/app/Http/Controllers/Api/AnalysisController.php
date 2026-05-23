@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -723,8 +723,9 @@ Analise integralmente o cenário seguindo TODAS as diretrizes acima.
 
 #dd($prompt);
         $apiKey = env('GEMINI_API_KEY');
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-        $apiKey = env('GEMINI_API_KEY'); 
+        $model = env('GEMINI_MODEL', 'gemini-2.0-flash');
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+        $apiKey = env('GEMINI_API_KEY');
         $data = [
             "contents" => [
                 [
