@@ -20,7 +20,7 @@ class AnalysisController extends Controller
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
-        $apiKey = "REMOVED"; // ⚠️ NÃO deixe sua chave exposta no código
+        $apiKey = env('GEMINI_API_KEY');
 
         $data = [
             "contents" => [
