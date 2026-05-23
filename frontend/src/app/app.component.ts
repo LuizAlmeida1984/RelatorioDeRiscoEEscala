@@ -30,44 +30,60 @@ export class AppComponent {
   errorMessage = '';
   savedReportId: number | null = null;
 
-  constructor(private reportService: ReportService) {}
+  constructor(private reportService: ReportService) {
+    console.log(
+      '%c' +
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n' +
+      '@@@@@@                                                              @@@@@@\n' +
+      '@@@@@@   @@@    @@@@@@@@   @                                        @@@@@@\n' +
+      '@@@@@@    @     @          @      Programa IEL Mentoria             @@@@@@\n' +
+      '@@@@@@    @     @@@@@@     @      Roda da Vida Empreendedora        @@@@@@\n' +
+      '@@@@@@    @     @          @      Instituto Euvaldo Lodi            @@@@@@\n' +
+      '@@@@@@   @@@    @@@@@@@@   @@@@@@@@  na Indústria                   @@@@@@\n' +
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
+      'color: #1a3b8c; font-family: monospace; font-size: 11px; font-weight: bold;'
+    );
+  }
+
+  get dominantRisk(): number {
+    return Math.max(...Object.values(this.riskFactors));
+  }
 
   get stats(): Stats {
     const inv = this.investment || 1;
     const ret = this.monthlyReturn || 0;
-    const prob = this.successProb || 0;
+    const prob = this.successProb / 100;
+    const risk = this.dominantRisk;
 
-    const dominantRisk = Math.max(...Object.values(this.riskFactors));
+    const sustainabilityFactor = risk >= 4 ? 0.6 : risk >= 3 ? 0.75 : risk >= 2 ? 0.9 : 1;
 
-    const sustainabilityFactor =
-      dominantRisk >= 4
-        ? 0.6
-        : dominantRisk >= 3
-        ? 0.75
-        : dominantRisk >= 2
-        ? 0.9
-        : 1;
+    const paybackNominal = (inv / Math.max(1, ret)).toFixed(1);
+    const evNominal = ret * 12;
 
-    const adjustedMonthlyReturn = ret * (prob / 100);
+    const adjustedMonthlyReturn = ret * prob * sustainabilityFactor;
+    const paybackAjustado = (inv / Math.max(1, adjustedMonthlyReturn)).toFixed(1);
 
-    const payback = (
-      inv / Math.max(1, adjustedMonthlyReturn * sustainabilityFactor)
-    ).toFixed(1);
+    const operationalExposure = inv * (risk / 5);
+    const evAjustado = (ret * 12 * prob) - operationalExposure;
 
     const baseROI = (((ret * 12) - inv) / inv) * 100;
-    const annualROI = (baseROI * (prob / 100) * sustainabilityFactor).toFixed(0);
+    const annualROINominal = baseROI.toFixed(0);
+    const annualROI = (baseROI * prob * sustainabilityFactor).toFixed(0);
 
-    const operationalExposure = inv * (dominantRisk / 5);
-    const expectedValue = (ret * 12 * (prob / 100)) - operationalExposure;
+    const riskLevel = risk >= 4 || prob < 0.5 ? 'Alto' : risk >= 3 || prob < 0.75 ? 'Moderado' : 'Baixo';
 
-    const riskLevel =
-      dominantRisk >= 4 || prob < 50
-        ? 'Alto'
-        : dominantRisk >= 3 || prob < 75
-        ? 'Moderado'
-        : 'Baixo';
-
-    return { payback, annualROI, expectedValue, riskLevel, dominantRisk, sustainabilityFactor, operationalExposure };
+    return {
+      payback: paybackNominal,
+      payback_ajustado: paybackAjustado,
+      annualROI,
+      annualROINominal,
+      expectedValue: evNominal,
+      ev_ajustado: evAjustado,
+      riskLevel,
+      dominantRisk: risk,
+      sustainabilityFactor,
+      operationalExposure,
+    };
   }
 
   get currentYear(): number {
@@ -93,9 +109,11 @@ export class AppComponent {
       success_prob: this.successProb,
       risk_factors: this.riskFactors,
       stats: {
-        payback: currentStats.payback,
+        payback_nominal: currentStats.payback,
+        payback_ajustado: currentStats.payback_ajustado,
         annual_roi: currentStats.annualROI,
-        expected_value: currentStats.expectedValue,
+        ev_nominal: currentStats.expectedValue,
+        ev_ajustado: currentStats.ev_ajustado,
         risk_level: currentStats.riskLevel,
         dominant_risk: currentStats.dominantRisk,
         sustainability_factor: currentStats.sustainabilityFactor,
@@ -107,7 +125,15 @@ export class AppComponent {
       .analyze(analyzePayload)
       .pipe(
         tap((res) => {
-          this.aiAnalysis = (res.analysis || '').replace(/[#*]+\s?/g, '').replace(/^\s*-{2,}\s*$/gm, '').trim();
+          this.aiAnalysis = (res.analysis || '')
+            .replace(/\$\\rightarrow\$/g, '→')
+            .replace(/\$\\Rightarrow\$/g, '⇒')
+            .replace(/\$\\leftarrow\$/g, '←')
+            .replace(/\$\\to\$/g, '→')
+            .replace(/\$[^$\n]*\$/g, '')
+            .replace(/[#*]+\s?/g, '')
+            .replace(/^\s*-{2,}\s*$/gm, '')
+            .trim();
         }),
         switchMap((res) =>
           this.reportService.saveReport({
@@ -156,6 +182,24 @@ export class AppComponent {
     this.pdfDate = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
 
     try {
+      const loadImg = (src: string): Promise<{ url: string; w: number; h: number } | null> =>
+        new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth; c.height = img.naturalHeight;
+            c.getContext('2d')!.drawImage(img, 0, 0);
+            resolve({ url: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+          };
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+
+      const [iel, cni] = await Promise.all([
+        loadImg('assets/logo-iel.png'),
+        loadImg('assets/logo-cni.png'),
+      ]);
+
       const { jsPDF } = await import('jspdf');
       const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
@@ -163,33 +207,52 @@ export class AppComponent {
       const pageH = doc.internal.pageSize.getHeight();
       const margin = 20;
       const contentW = pageW - margin * 2;
-      let y = 22;
 
       const checkPage = (needed = 10) => {
         if (y + needed > pageH - 18) { doc.addPage(); y = 22; }
       };
 
-      // ── CABEÇALHO CENTRALIZADO ─────────────────────────
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184);
-      doc.text('ANÁLISE ESTRATÉGICA', pageW / 2, y, { align: 'center' });
-      y += 6;
+      // ── CABEÇALHO (igual ao HTML) ──────────────────────
+      const headerH = 24;
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(30, 41, 59);
-      doc.text('RELATÓRIO DE RISCO E ESCALA', pageW / 2, y, { align: 'center' });
-      y += 9;
+      if (iel) {
+        const ielH = 10;
+        const ielW = ielH * (iel.w / iel.h);
+        const ielY = (headerH - ielH) / 2;
+        doc.addImage(iel.url, 'PNG', margin, ielY, ielW, ielH);
 
+        const tx = margin + ielW + 3;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(26, 59, 140);
+        doc.text('Programa IEL Mentoria para Mulheres', tx, headerH / 2 - 1);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6);
+        doc.setTextColor(148, 163, 184);
+        doc.text('RELATÓRIO DE RISCO E ESCALA', tx, headerH / 2 + 4);
+      }
+
+      if (cni) {
+        const cniH = 18;
+        const cniW = cniH * (cni.w / cni.h);
+        doc.addImage(cni.url, 'PNG', pageW - margin - cniW, (headerH - cniH) / 2, cniW, cniH);
+      }
+
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.3);
+      doc.line(0, headerH, pageW, headerH);
+
+      let y = headerH + 10;
+
+      // Nome e data abaixo do cabeçalho
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
+      doc.setFontSize(14);
       doc.setTextColor(15, 23, 42);
       doc.text(this.menteeName, pageW / 2, y, { align: 'center' });
       y += 7;
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
       doc.text(this.pdfDate, pageW / 2, y, { align: 'center' });
       y += 12;
@@ -250,7 +313,7 @@ export class AppComponent {
       doc.setTextColor(30, 41, 59);
       doc.text(this.stats.payback, mc[0], y);
       doc.setTextColor(16, 185, 129);
-      doc.text(`${this.stats.annualROI}%`, mc[1], y);
+      doc.text(`${this.stats.annualROINominal}%`, mc[1], y);
       const rc = this.stats.riskLevel === 'Baixo' ? [16, 185, 129]
                : this.stats.riskLevel === 'Moderado' ? [245, 158, 11]
                : [239, 68, 68];
@@ -291,13 +354,55 @@ export class AppComponent {
         doc.setFontSize(10);
         doc.setTextColor(71, 85, 105);
 
+        const indent = 8;
+        const lineH = 5;
+
+        const renderParagraph = (text: string, startY: number): number => {
+          const words = text.trim().split(/\s+/);
+          const lines: { ws: string[]; x: number; maxW: number }[] = [];
+          let lineWs: string[] = [];
+          let lineW = 0;
+          let first = true;
+
+          for (const word of words) {
+            const wW = doc.getTextWidth(word);
+            const spW = lineWs.length > 0 ? doc.getTextWidth(' ') : 0;
+            const maxW = first ? contentW - indent : contentW;
+            if (lineWs.length > 0 && lineW + spW + wW > maxW) {
+              lines.push({ ws: lineWs, x: first ? margin + indent : margin, maxW });
+              lineWs = [word]; lineW = wW; first = false;
+            } else {
+              if (lineWs.length > 0) lineW += spW;
+              lineWs.push(word); lineW += wW;
+            }
+          }
+          if (lineWs.length > 0) {
+            lines.push({ ws: lineWs, x: first ? margin + indent : margin, maxW: first ? contentW - indent : contentW });
+          }
+
+          let cy = startY;
+          for (let i = 0; i < lines.length; i++) {
+            const { ws, x, maxW } = lines[i];
+            if (i === lines.length - 1 || ws.length === 1) {
+              doc.text(ws.join(' '), x, cy);
+            } else {
+              const totalW = ws.reduce((s, w) => s + doc.getTextWidth(w), 0);
+              const gap = (maxW - totalW) / (ws.length - 1);
+              let cx = x;
+              for (const w of ws) { doc.text(w, cx, cy); cx += doc.getTextWidth(w) + gap; }
+            }
+            cy += lineH;
+          }
+          return cy;
+        };
+
         const paragraphs = this.aiAnalysis.split('\n');
         for (const para of paragraphs) {
           if (!para.trim()) { y += 3; continue; }
-          const lines = doc.splitTextToSize(para.trim(), contentW);
-          checkPage(lines.length * 5 + 3);
-          doc.text(lines, margin, y);
-          y += lines.length * 5 + 2;
+          const estimatedLines = Math.ceil(doc.getTextWidth(para.trim()) / contentW) + 1;
+          checkPage(estimatedLines * lineH + 3);
+          y = renderParagraph(para, y);
+          y += 2;
         }
       }
 
@@ -346,6 +451,17 @@ export class AppComponent {
       : this.stats.riskLevel === 'Moderado'
       ? 'text-amber-500'
       : 'text-rose-500';
+  }
+
+  newSession(): void {
+    this.menteeName = '';
+    this.investment = 10000;
+    this.monthlyReturn = 2500;
+    this.successProb = 80;
+    this.riskFactors = { market: 1, team: 1, technical: 1, external: 1 };
+    this.aiAnalysis = '';
+    this.errorMessage = '';
+    this.savedReportId = null;
   }
 
   get expectedValuePositive(): boolean {

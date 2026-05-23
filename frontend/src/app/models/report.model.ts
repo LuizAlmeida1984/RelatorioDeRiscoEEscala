@@ -7,8 +7,11 @@ export interface RiskFactors {
 
 export interface Stats {
   payback: string;
+  payback_ajustado: string;
   annualROI: string;
+  annualROINominal: string;
   expectedValue: number;
+  ev_ajustado: number;
   riskLevel: string;
   dominantRisk: number;
   sustainabilityFactor: number;
@@ -22,9 +25,11 @@ export interface AnalyzePayload {
   success_prob: number;
   risk_factors: RiskFactors;
   stats: {
-    payback: string;
+    payback_nominal: string;
+    payback_ajustado: string;
     annual_roi: string;
-    expected_value: number;
+    ev_nominal: number;
+    ev_ajustado: number;
     risk_level: string;
     dominant_risk: number;
     sustainability_factor: number;

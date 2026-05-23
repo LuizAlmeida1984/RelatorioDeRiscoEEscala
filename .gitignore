@@ -22,6 +22,10 @@ backend/vendor/
 backend/.env
 backend/storage/logs/*.log
 
+# Scripts de deploy (contêm credenciais)
+deploy.mjs
+ssh-check.mjs
+
 # OS / Editor
 .DS_Store
 Thumbs.db

@@ -2,6 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-header__logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.app-header__logo-cni {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1a3b8c;
+}
+
+.app-header p {
+  margin: 0.1rem 0 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: #64748b;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 @media print {
   @page {
     size: A4;

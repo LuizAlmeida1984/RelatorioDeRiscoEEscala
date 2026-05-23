@@ -1,3 +1,14 @@
+<header class="app-header">
+  <div class="app-header__brand">
+    <img src="assets/logo-iel.png" alt="Logo IEL" class="app-header__logo" />
+    <div>
+      <h1>Programa IEL Mentoria para Mulheres</h1>
+      <p>Relatório de Risco e Escala</p>
+    </div>
+  </div>
+  <img src="assets/logo-cni.png" alt="CNI Liderança Feminina" class="app-header__logo-cni" />
+</header>
+
 <div class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
 
   <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -241,6 +252,13 @@
               >
                 {{ generatingPdf ? 'Gerando PDF...' : 'Gerar PDF' }}
               </button>
+              <button
+                type="button"
+                (click)="newSession()"
+                class="border-0 rounded-[0.7rem] cursor-pointer font-bold uppercase tracking-[0.04em] bg-white/10 text-white px-4 py-2 hover:bg-white/20 transition-all"
+              >
+                Nova Sessão
+              </button>
             </div>
           </div>
           <div class="text-sm leading-relaxed font-light italic opacity-95 whitespace-pre-wrap">
@@ -321,7 +339,7 @@
             <div>
               <p class="text-slate-400 uppercase tracking-widest mb-1"
                  style="font-family: Helvetica, Arial, sans-serif; font-weight: bold; font-size: 12pt;">ROI Anual</p>
-              <p class="text-2xl font-black text-emerald-600">{{ stats.annualROI }}%</p>
+              <p class="text-2xl font-black text-emerald-600">{{ stats.annualROINominal }}%</p>
             </div>
             <div>
               <p class="text-slate-400 uppercase tracking-widest mb-1"
