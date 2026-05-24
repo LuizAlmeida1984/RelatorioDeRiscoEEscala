@@ -257,16 +257,21 @@ export class AppComponent {
       doc.text(this.pdfDate, pageW / 2, y, { align: 'center' });
       y += 12;
 
-      // ── DADOS DE ENTRADA (2 colunas) ───────────────────
+      // ── DADOS DE ENTRADA (2 colunas) — igual ao HTML ──
       const c1 = margin;
-      const c2 = pageW / 2;
+      const c2 = margin + contentW / 2;
 
+      // Fundo cinza-claro (bg-slate-50) igual ao card do HTML
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(margin - 4, y - 4, contentW + 8, 40, 3, 3, 'F');
+
+      // ── Linha 1: Investimento Total | Retorno Mensal ──
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
       doc.text('INVESTIMENTO TOTAL', c1, y);
       doc.text('RETORNO MENSAL PLANEJADO', c2, y);
-      y += 5;
+      y += 6;
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
@@ -274,29 +279,57 @@ export class AppComponent {
       doc.text(`R$ ${this.formatCurrency(this.investment)}`, c1, y);
       doc.setTextColor(16, 185, 129);
       doc.text(`R$ ${this.formatCurrency(this.monthlyReturn)}`, c2, y);
-      y += 10;
+      y += 12;
 
+      // ── Linha 2: Confiança | Matriz de Risco ──────────
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
       doc.text('CONFIANÇA NA EXECUÇÃO', c1, y);
       doc.text('MATRIZ DE RISCO (1–5)', c2, y);
-      y += 5;
+      y += 6;
 
+      // Confiança na Execução — valor em indigo bold
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
       doc.setTextColor(99, 102, 241);
       doc.text(`${this.successProb}%`, c1, y);
 
-      doc.setFont('helvetica', 'normal');
+      // Matriz de Risco — labels em cinza, valores em negrito escuro (igual ao HTML)
       doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Mercado: ${this.riskFactors.market}   Capital Humano: ${this.riskFactors.team}`, c2, y);
-      y += 5;
-      doc.text(`Técnica: ${this.riskFactors.technical}   Ext. Brasil: ${this.riskFactors.external}`, c2, y);
-      y += 12;
+      const colGap = 18;
+      let rx = c2;
 
-      // ── MÉTRICAS (3 colunas) ───────────────────────────
+      // Linha 1: Mercado [bold] · Capital Humano [bold]
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+      doc.text('Mercado ', rx, y);
+      rx += doc.getTextWidth('Mercado ');
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+      doc.text(`${this.riskFactors.market}`, rx, y);
+      rx += doc.getTextWidth(`${this.riskFactors.market}`) + colGap;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+      doc.text('Capital Humano ', rx, y);
+      rx += doc.getTextWidth('Capital Humano ');
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+      doc.text(`${this.riskFactors.team}`, rx, y);
+      y += 5;
+
+      // Linha 2: Técnica [bold] · Ext. Brasil [bold]
+      rx = c2;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+      doc.text('Técnica ', rx, y);
+      rx += doc.getTextWidth('Técnica ');
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+      doc.text(`${this.riskFactors.technical}`, rx, y);
+      rx += doc.getTextWidth(`${this.riskFactors.technical}`) + colGap;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+      doc.text('Ext. Brasil ', rx, y);
+      rx += doc.getTextWidth('Ext. Brasil ');
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+      doc.text(`${this.riskFactors.external}`, rx, y);
+      y += 14;
+
+      // ── MÉTRICAS (3 colunas) — igual ao HTML ──────────
       const third = contentW / 3;
       const mc = [margin, margin + third, margin + third * 2];
 
@@ -313,6 +346,7 @@ export class AppComponent {
       doc.setTextColor(30, 41, 59);
       doc.text(this.stats.payback, mc[0], y);
       doc.setTextColor(16, 185, 129);
+      // annualROINominal = ROI nominal (sem ajuste de risco) — exibição padrão
       doc.text(`${this.stats.annualROINominal}%`, mc[1], y);
       const rc = this.stats.riskLevel === 'Baixo' ? [16, 185, 129]
                : this.stats.riskLevel === 'Moderado' ? [245, 158, 11]

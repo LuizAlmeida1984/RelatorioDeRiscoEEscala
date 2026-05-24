@@ -708,13 +708,7 @@ Investimento total;
 Retorno mensal planejado;
 Probabilidade de sucesso;
 ROI preliminar;
-Payback preliminar;
-Matriz de risco;
-Descrição estratégica do movimento (quando disponível);
-Contexto operacional (quando disponível).
-
-Analise integralmente o cenário seguindo TODAS as diretrizes acima.
-.";
+";
 
 #dd($prompt);
         // config() lê do cache em produção; env() fica em branco quando config:cache está ativo

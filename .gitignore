@@ -32,6 +32,10 @@ deploy.mjs
 ssh-check.mjs
 ssh-*.js
 *.deploy.js
+check-status.js
+deploy.js
+fix-deploy.js
+run-compose.js
 
 # NPM temporário (raiz do projeto)
 /node_modules/
