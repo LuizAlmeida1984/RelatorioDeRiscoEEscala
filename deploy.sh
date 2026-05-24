@@ -55,7 +55,7 @@ DB_DATABASE=roi_payback
 DB_USERNAME=postgres
 DB_PASSWORD=desenv
 GEMINI_API_KEY=SUA_CHAVE_AQUI
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 FRONTEND_URL=http://2.24.198.67:81
 ENV
     exit 1

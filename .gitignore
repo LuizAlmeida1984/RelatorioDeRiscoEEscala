@@ -20,12 +20,26 @@ frontend/.angular/
 # Backend (pasta de source, sem vendor)
 backend/vendor/
 backend/.env
-backend/.env.production
+backend/.env.*
 backend/storage/logs/*.log
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
 
-# Scripts de deploy (contêm credenciais)
+# Scripts de deploy / debug temporários (podem conter credenciais)
 deploy.mjs
 ssh-check.mjs
+ssh-*.js
+*.deploy.js
+
+# NPM temporário (raiz do projeto)
+/node_modules/
+/package.json
+/package-lock.json
+
+# Builds/pastas temporárias
+tempiml-frontend/
 
 # OS / Editor
 .DS_Store
@@ -33,3 +47,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+*.swo
