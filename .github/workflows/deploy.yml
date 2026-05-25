@@ -1,0 +1,105 @@
+name: 🚀 Deploy para VPS
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  # ────────────────────────────────────────────
+  # JOB 1: detectar quais partes do código mudaram
+  # ────────────────────────────────────────────
+  detect-changes:
+    name: Detectar mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verificar arquivos alterados
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "all")
+          echo "Arquivos alterados:"
+          echo "$CHANGED"
+
+          if echo "$CHANGED" | grep -qE "^frontend/|^all$"; then
+            echo "frontend=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$CHANGED" | grep -qE "^(backend|nginx)/|^docker-compose\.yml|^all$"; then
+            echo "backend=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ────────────────────────────────────────────
+  # JOB 2: deploy na VPS via SSH
+  # A API KEY fica APENAS no arquivo .env da VPS
+  # e nunca é exposta no GitHub.
+  # ────────────────────────────────────────────
+  deploy:
+    name: Deploy via SSH
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔐 Conectar na VPS e fazer deploy
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEPLOY_FRONTEND: ${{ needs.detect-changes.outputs.frontend }}
+          DEPLOY_BACKEND: ${{ needs.detect-changes.outputs.backend }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: DEPLOY_FRONTEND,DEPLOY_BACKEND
+          script: |
+            set -e
+            cd /opt/roiescala
+
+            echo "========================================"
+            echo "  ROI Escala — Deploy Automático"
+            echo "========================================"
+
+            # ── 1. Atualizar repositório ────────────────
+            echo "[1/4] 📥 Atualizando repositório..."
+            git pull origin master
+            echo "      ✅ Repositório atualizado."
+
+            # ── 2. Rebuild do frontend (se mudou) ───────
+            if [ "$DEPLOY_FRONTEND" = "true" ]; then
+              echo "[2/4] 🏗️  Reconstruindo frontend Angular..."
+              cd /opt/roiescala/frontend
+              npm ci --legacy-peer-deps --silent
+              npx ng build --configuration production
+              cd /opt/roiescala
+              echo "      ✅ Frontend reconstruído!"
+            else
+              echo "[2/4] ⏭️  Frontend sem mudanças — pulando build."
+            fi
+
+            # ── 3. Reiniciar Docker (se backend/nginx mudou) ─
+            if [ "$DEPLOY_BACKEND" = "true" ]; then
+              echo "[3/4] 🐳 Reiniciando containers Docker..."
+              docker compose down --remove-orphans
+              docker compose up -d --build
+              sleep 10
+              docker compose exec -T app composer install --no-dev --optimize-autoloader --quiet
+              docker compose exec -T app php artisan config:cache
+              docker compose exec -T app php artisan route:cache
+              docker compose exec -T app php artisan migrate --force
+              echo "      ✅ Backend atualizado!"
+            else
+              echo "[3/4] ⏭️  Backend sem mudanças — containers mantidos."
+            fi
+
+            # ── 4. Resumo final ─────────────────────────
+            echo "[4/4] 🎉 Deploy concluído!"
+            echo "      Acesse: http://2.24.198.67:81"
+            echo "========================================"
